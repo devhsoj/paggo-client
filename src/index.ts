@@ -17,19 +17,25 @@ const Commands = {
 } as const;
 
 class Response {
-    success: boolean;
-    data: Uint8Array;
+    data: Uint8Array | null;
 
-    constructor(success: boolean, data: Uint8Array) {
-        this.success = success;
+    constructor(data: Uint8Array | null) {
         this.data = data;
     }
 
     public toString() {
+        if (!this.data) {
+            return '';
+        }
+
         return String.fromCharCode(...this.data);
     }
 
     public toBoolean() {
+        if (!this.data) {
+            return false;
+        }
+
         return this.data[0] == 1;
     }
 }
@@ -72,7 +78,7 @@ export class Client {
             this.socket.once('data', (data) => resolve(Uint8Array.from(data)));
         });
 
-        return new Response(true, res);
+        return new Response(res);
     }
 
     public async set(key: string, value: string) {
