@@ -11,7 +11,7 @@ npm i paggo-client
 ## Example Usage
 
 ```typescript
-import { Client } from 'paggo-client';
+import { Client } from '@paggo/client';
 
 (async () => {
     const client = new Client();
