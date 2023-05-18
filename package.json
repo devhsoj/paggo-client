@@ -1,5 +1,5 @@
 {
-    "name": "paggo-client",
+    "name": "@paggo/client",
     "version": "0.0.1",
     "description": "paggo client",
     "main": "dist/index.js",
