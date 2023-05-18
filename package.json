@@ -3,10 +3,19 @@
     "version": "0.0.1",
     "description": "paggo client",
     "main": "dist/index.js",
+    "types": "dist/index.d.js",
+    "files": [
+        "dist/"
+    ],
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "keywords": [],
+    "keywords": [
+        "typescript",
+        "database",
+        "paggo",
+        "tcp"
+    ],
     "author": "Joshua Benfield",
     "license": "MIT",
     "devDependencies": {
