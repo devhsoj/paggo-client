@@ -1,4 +1,4 @@
-# paggo-client
+# paggo-client-ts
 
 A TypeScript client library for [paggo](https://github.com/devhsoj/paggo).
 
