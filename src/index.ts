@@ -90,9 +90,17 @@ export class Client {
     }
     
     public async connect() {
-        await new Promise<void>((resolve) => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        let rejectCallback: (reason?: any) => void = () => {};
+
+        await new Promise<void>((resolve, reject) => {
             this.socket.connect(this.options.port, this.options.host, resolve);
+
+            rejectCallback = reject;
+            this.socket.once('error', rejectCallback);
         });
+
+        this.socket.removeListener('error', rejectCallback);
     }
 
     public close() {
