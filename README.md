@@ -1,11 +1,11 @@
 # paggo-client
 
-A TypeScript client library for paggo.
+A TypeScript client library for [paggo](https://github.com/devhsoj/paggo).
 
 ## Installation
 
 ```bash
-npm i paggo-client
+npm i @paggo/client
 ```
 
 ## Example Usage
