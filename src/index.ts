@@ -3,8 +3,8 @@ import { Socket } from 'node:net';
 type ConnectionOptions = {
     host: string,
     port: number,
-    maxKeySize: number,
-    maxValueSize: number
+    maxKeySizeBytes: number,
+    maxValueSizeBytes: number
 }
 
 const Commands = {
@@ -28,7 +28,7 @@ class Response {
             return '';
         }
 
-        return String.fromCharCode(...this.data);
+        return String.fromCharCode(...this.data).replaceAll('\x00', '');
     }
 
     public toBoolean() {
@@ -38,7 +38,17 @@ class Response {
 
         return this.data[0] == 1;
     }
+
+    public toNumber() {
+        if (!this.data) {
+            return 0;
+        }
+
+        return parseInt(this.toString());
+    }
 }
+
+type SerializableValue = string | Uint8Array | number;
 
 export class Client {
     options: ConnectionOptions;
@@ -48,11 +58,35 @@ export class Client {
     constructor(options: ConnectionOptions = {
         host: 'localhost',
         port: 9055,
-        maxKeySize: 32,
-        maxValueSize: 1_024
+        maxKeySizeBytes: 32,
+        maxValueSizeBytes: 1_024
     }) {
         this.options = options;
         this.socket = new Socket();
+
+        this.socket.setNoDelay(true);
+    }
+
+    private validateKey(key: string) {
+        if (key.length > this.options.maxKeySizeBytes) {
+            throw `key '${key}' too long (> ${ this.options.maxKeySizeBytes } b)`;
+        }
+    }
+
+    private validateValue(value: SerializableValue) {
+        if (typeof value === 'number') {
+            value = value.toString();
+        }
+
+        if (value.length > this.options.maxValueSizeBytes) {
+            throw `value too long (> ${ this.options.maxValueSizeBytes } b)`;
+        }
+    }
+
+    private serializeKey(key: string): string {
+        this.validateKey(key);
+
+        return key + '\x00'.repeat(this.options.maxKeySizeBytes - key.length);
     }
     
     public async connect() {
@@ -67,12 +101,9 @@ export class Client {
 
     }
 
-    private generateKey(key: string): string {
-        return key + '\x00'.repeat(this.options.maxKeySize - key.length);
-    }
-
     public async get(key: string) {
-        this.socket.write(`${Commands.GET}${this.generateKey(key)}`);
+        this.validateKey(key);
+        this.socket.write(`${Commands.GET}${this.serializeKey(key)}`);
 
         const res = await new Promise<Uint8Array>((resolve) => {
             this.socket.once('data', (data) => resolve(Uint8Array.from(data)));
@@ -81,31 +112,36 @@ export class Client {
         return new Response(res);
     }
 
-    public async set(key: string, value: string) {
-        this.socket.write(`${Commands.SET}${this.generateKey(key)}${value}`);
+    public async set(key: string, value: SerializableValue) {
+        this.validateKey(key);
+        this.validateValue(value);
+
+        this.socket.write(`${Commands.SET}${this.serializeKey(key)}${value}`);
 
         const res = await new Promise<Uint8Array>((resolve) => {
-            this.socket.once('data', (data) => resolve(Uint8Array.from(data)));
+            this.socket.once('data', resolve);
         });
 
         return res[0] === 1;
     }
 
     public async exists(key: string) {
-        this.socket.write(`${Commands.EXISTS}${this.generateKey(key)}`);
+        this.validateKey(key);
+        this.socket.write(`${Commands.EXISTS}${this.serializeKey(key)}`);
 
         const res = await new Promise<Uint8Array>((resolve) => {
-            this.socket.once('data', (data) => resolve(Uint8Array.from(data)));
+            this.socket.once('data', resolve);
         });
 
         return res[0] === 1;
     }
 
     public async delete(key: string) {
-        this.socket.write(`${Commands.DELETE}${this.generateKey(key)}`);
+        this.validateKey(key);
+        this.socket.write(`${Commands.DELETE}${this.serializeKey(key)}`);
 
         const res = await new Promise<Uint8Array>((resolve) => {
-            this.socket.once('data', (data) => resolve(Uint8Array.from(data)));
+            this.socket.once('data', resolve);
         });
 
         return res[0] === 1;
