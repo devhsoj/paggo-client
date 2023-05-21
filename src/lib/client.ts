@@ -34,6 +34,10 @@ export class Client {
     }
 
     private validateValue(value: SerializableValue) {
+        if (typeof value === 'boolean') {
+            return;
+        }
+
         if (typeof value === 'number') {
             value = value.toString();
         }
@@ -110,6 +114,8 @@ export class Client {
             value = this.encoder.encode(value);
         } else if (typeof value === 'number') {
             value = encodeNumberToUint8Array(value);
+        } else if (typeof value === 'boolean') {
+            value = new Uint8Array([value ? 1 : 0]);
         }
 
         const data = new Uint8Array(1 + this.options.maxKeySizeBytes + value.byteLength);

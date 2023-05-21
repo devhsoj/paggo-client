@@ -45,4 +45,4 @@ export class SerialResponse {
     }
 }
 
-export type SerializableValue = string | Uint8Array | number;
+export type SerializableValue = Uint8Array | string | number | boolean;
