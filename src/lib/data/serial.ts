@@ -1,5 +1,18 @@
 import { encodeUint8ArrayToNumber } from './encoding';
 
+type BufferEncoding =
+    | 'ascii'
+    | 'utf8'
+    | 'utf-8'
+    | 'utf16le'
+    | 'ucs2'
+    | 'ucs-2'
+    | 'base64'
+    | 'base64url'
+    | 'latin1'
+    | 'binary'
+    | 'hex';
+
 export class SerialResponse {
     data: Uint8Array | null;
 
