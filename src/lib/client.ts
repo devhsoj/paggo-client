@@ -4,10 +4,10 @@ import { Commands } from '../commands';
 import { Socket } from 'net';
 
 export type ConnectionOptions = {
-    host: string,
-    port: number,
-    maxKeySizeBytes: number,
-    maxValueSizeBytes: number
+    host?: string,
+    port?: number,
+    maxKeySizeBytes?: number,
+    maxValueSizeBytes?: number
 }
 
 export class Client {
@@ -25,10 +25,16 @@ export class Client {
         this.options = options;
         this.socket = new Socket();
         this.encoder = new TextEncoder();
+
+        if (this.options.host === undefined) this.options.host = 'localhost';
+        if (this.options.port === undefined) this.options.port = 9055;
+        if (this.options.maxKeySizeBytes === undefined) this.options.maxKeySizeBytes = 32;
+        if (this.options.maxValueSizeBytes === undefined) this.options.maxValueSizeBytes = 1_024;
     }
 
     private validateKey(key: string) {
-        if (key.length > this.options.maxKeySizeBytes) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        if (key.length > this.options.maxKeySizeBytes!) {
             throw `key '${key}' too long (> ${ this.options.maxKeySizeBytes } b)`;
         }
     }
@@ -42,7 +48,8 @@ export class Client {
             value = value.toString();
         }
 
-        if (value.length > this.options.maxValueSizeBytes) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        if (value.length > this.options.maxValueSizeBytes!) {
             throw `value too long (> ${ this.options.maxValueSizeBytes } b)`;
         }
     }
@@ -64,7 +71,8 @@ export class Client {
         let rejectCallback: (reason?: any) => void = () => {};
 
         await new Promise<void>((resolve, reject) => {
-            this.socket.connect(this.options.port, this.options.host, resolve);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.socket.connect(this.options.port!, this.options.host!, resolve);
 
             rejectCallback = reject;
             this.socket.once('error', rejectCallback);
@@ -92,7 +100,8 @@ export class Client {
     public async get(key: string) {
         this.validateKey(key);
 
-        const data = new Uint8Array(1 + this.options.maxKeySizeBytes);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const data = new Uint8Array(1 + this.options.maxKeySizeBytes!);
 
         data[0] = Commands.GET;
         data.set(this.serializeKey(key), 1);
@@ -118,7 +127,8 @@ export class Client {
             value = new Uint8Array([value ? 1 : 0]);
         }
 
-        const data = new Uint8Array(1 + this.options.maxKeySizeBytes + value.byteLength);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const data = new Uint8Array(1 + this.options.maxKeySizeBytes! + value.byteLength);
 
         data[0] = Commands.SET;
         data.set(this.serializeKey(key), 1);
@@ -136,7 +146,8 @@ export class Client {
     public async exists(key: string) {
         this.validateKey(key);
 
-        const data = new Uint8Array(1 + this.options.maxKeySizeBytes);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const data = new Uint8Array(1 + this.options.maxKeySizeBytes!);
 
         data[0] = Commands.EXISTS;
         data.set(this.serializeKey(key), 1);
@@ -153,7 +164,8 @@ export class Client {
     public async delete(key: string) {
         this.validateKey(key);
 
-        const data = new Uint8Array(1 + this.options.maxKeySizeBytes);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const data = new Uint8Array(1 + this.options.maxKeySizeBytes!);
 
         data[0] = Commands.DELETE;
         data.set(this.serializeKey(key), 1);
